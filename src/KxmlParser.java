@@ -4,24 +4,21 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.Reader;
+import java.util.Optional;
 
-public class KxmlParser {
-  static Document parse(Path submission) throws IOException, XmlPullParserException {
-    try (InputStream is = Files.newInputStream(submission);
-         InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
-      Document tempDoc = new Document();
+public class KxmlParser implements Parser {
+  @Override public Optional<String> parse(Reader form, String attributeName) {
+    try {
+      Document document = new Document();
       KXmlParser parser = new KXmlParser();
-      parser.setInput(isr);
+      parser.setInput(form);
       parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-      tempDoc.parse(parser);
-      return tempDoc;
-    } catch (IOException | XmlPullParserException e) {
-      throw e;
+      document.parse(parser);
+      return Optional.ofNullable(document.getRootElement().getAttributeValue(null, attributeName));
+    } catch (XmlPullParserException | IOException e) {
+      e.printStackTrace();
     }
+    return Optional.empty();
   }
 }
